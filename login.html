@@ -18,6 +18,7 @@
       <label class="form-label" for="e">Email</label><input class="form-control" id="e" type="email" required>
       <label class="form-label mt-3" for="p">Password</label><input class="form-control" id="p" type="password"
         required>
+      <button class="btn btn-link align-self-start px-0" id="reset" type="button">Forgot password?</button>
       <button class="btn btn-primary mt-4">Log in</button>
       <button class="btn btn-outline-secondary mt-2" id="resend" type="button" hidden>Resend verification email</button>
       <p class="text-muted mt-3 mb-0">New here? <a href="register.html">Create an account</a></p>
@@ -26,9 +27,20 @@
   <footer id="site-footer"></footer>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module">
-    import { renderNav, auth, signInWithEmailAndPassword, sendEmailVerification, signOut, db, doc, getDoc, say } from "./js/app.js";
+    import { renderNav, auth, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, signOut, db, doc, getDoc, say } from "./js/app.js";
     renderNav(null);
     let unverifiedEmail = "";
+    reset.onclick = async () => {
+      const email = document.getElementById("e");
+      if (!email.reportValidity()) return;
+      reset.disabled = true;
+      try {
+        await sendPasswordResetEmail(auth, email.value.trim());
+        say(m, "If an account exists for this email, password reset instructions have been sent.", true);
+      } catch {
+        say(m, "Could not send a password reset email. Check the email address and try again.");
+      } finally { reset.disabled = false; }
+    };
     f.onsubmit = async e => {
       e.preventDefault();
       resend.hidden = true;
