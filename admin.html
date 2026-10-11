@@ -50,7 +50,7 @@
   <footer id="site-footer"></footer>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module">
-    import { guard, db, collection, doc, list, addDoc, updateDoc, deleteDoc, esc, money, badge, uploadProductImage } from "./js/app.js";
+    import { guard, db, collection, doc, list, addDoc, updateDoc, deleteDoc, esc, money, badge, uploadProductImage, invalidateCatalogCache } from "./js/app.js";
     let legacyProducts = [];
     guard(["admin"], load);
     async function load() {
@@ -78,6 +78,7 @@
           const imageUrl = await uploadProductImage(imageBlob, product.sellerId);
           await updateDoc(doc(db, "products", product.id), { imageUrl });
           product.imageUrl = imageUrl;
+          invalidateCatalogCache("products", "featured-products");
           migrated++;
         }
         imageMigrationStatus.textContent = `Moved ${migrated} product photo(s).`;
@@ -92,11 +93,11 @@
       const { a, id } = e.target.dataset; if (!a) return;
       if (a === "vok") { await updateDoc(doc(db, "verifications", id), { status: "Approved", adminNote: "" }); await updateDoc(doc(db, "users", id), { approved: true }); }
       if (a === "vno") { const note = prompt("Reason for rejection (the seller will see this):"); if (note === null) return; await updateDoc(doc(db, "verifications", id), { status: "Rejected", adminNote: note }); await updateDoc(doc(db, "users", id), { approved: false }); }
-      if (a === "dc" && confirm("Delete category?")) await deleteDoc(doc(db, "categories", id));
-      if (a === "dp" && confirm("Remove product?")) await deleteDoc(doc(db, "products", id));
+      if (a === "dc" && confirm("Delete category?")) { await deleteDoc(doc(db, "categories", id)); invalidateCatalogCache("categories"); }
+      if (a === "dp" && confirm("Remove product?")) { await deleteDoc(doc(db, "products", id)); invalidateCatalogCache("products", "featured-products"); }
       load();
     };
-    cf.onsubmit = async e => { e.preventDefault(); await addDoc(collection(db, "categories"), { name: cn.value }); cf.reset(); load(); };
+    cf.onsubmit = async e => { e.preventDefault(); await addDoc(collection(db, "categories"), { name: cn.value }); invalidateCatalogCache("categories"); cf.reset(); load(); };
   </script>
 </body>
 

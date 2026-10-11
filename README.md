@@ -6,6 +6,7 @@ A web marketplace where farmers and artisans of the Chittagong Hill Tracts list 
 - Bootstrap 5 responsive UI
 - Seller identity verification: sellers upload ID photos, the admin approves or rejects (with a reason), and only approved sellers can list products
 - Product photos are compressed and stored in Firebase Storage
+- Public product and category listings use a short-lived browser cache for faster repeat visits
 - Landing page, product browsing with search, category and price filters
 - Registration and login with email verification and three roles: **Buyer**, **Seller**, **Admin**
 - Role-based access (page guards in JS and Firestore security rules in `firestore.rules`)

@@ -47,16 +47,22 @@
   </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module">
-    import { onUser, db, collection, list, addDoc, serverTimestamp, esc, card, say } from "./js/app.js";
-    let me, all = [], cur;
+    import { onUser, db, collection, list, listCatalog, addDoc, serverTimestamp, esc, card, say } from "./js/app.js";
+    let me, all = [], cur, categoriesLoaded = false;
     const modal = new bootstrap.Modal(od);
     [contactNo, addr].forEach(field => field.oninput = () => field.setCustomValidity(""));
     onUser(async p => {
       me = p;
-      const cats = await list(collection(db, "categories"));
-      c.innerHTML += cats.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("");
-      c.value = new URLSearchParams(location.search).get("cat") || "";
-      all = await list(collection(db, "products")); draw();
+      const requestedCategory = new URLSearchParams(location.search).get("cat") || "";
+      await Promise.all([
+        listCatalog("categories", collection(db, "categories"), cats => {
+          const selectedCategory = categoriesLoaded ? c.value : requestedCategory;
+          c.innerHTML = '<option value="">All categories</option>' + cats.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("");
+          c.value = selectedCategory;
+          categoriesLoaded = true;
+        }),
+        listCatalog("products", collection(db, "products"), products => { all = products; draw(); })
+      ]);
     });
     function draw() {
       const t = q.value.toLowerCase(), max = Number(mx.value) || Infinity;

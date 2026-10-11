@@ -53,6 +53,48 @@ export async function uploadProductImage(file, sellerId) {
 
 export const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 export const list = async q => (await getDocs(q)).docs.map(d => ({ id: d.id, ...d.data() }));
+const catalogCachePrefix = "cht-jummo:catalog:";
+const catalogCacheTtl = 2 * 60 * 1000;
+const catalogCacheLimit = 2 * 1024 * 1024;
+
+export async function listCatalog(cacheName, q, onUpdate) {
+  const cacheKey = catalogCachePrefix + cacheName;
+  let cached = null;
+  try {
+    const entry = JSON.parse(localStorage.getItem(cacheKey));
+    if (Array.isArray(entry?.items)) cached = entry;
+  } catch {
+    try { localStorage.removeItem(cacheKey); } catch { }
+  }
+
+  if (cached) {
+    onUpdate(cached.items);
+    if (Date.now() - cached.savedAt < catalogCacheTtl) return cached.items;
+  }
+
+  try {
+    const items = await list(q);
+    onUpdate(items);
+    try {
+      if (items.every(item => typeof item.imageUrl !== "string" || !item.imageUrl.startsWith("data:"))) {
+        const serialized = JSON.stringify({ savedAt: Date.now(), items });
+        if (serialized.length <= catalogCacheLimit) localStorage.setItem(cacheKey, serialized);
+        else localStorage.removeItem(cacheKey);
+      } else localStorage.removeItem(cacheKey);
+    } catch { }
+    return items;
+  } catch (error) {
+    if (cached) return cached.items;
+    throw error;
+  }
+}
+
+export function invalidateCatalogCache(...cacheNames) {
+  try {
+    cacheNames.forEach(name => localStorage.removeItem(catalogCachePrefix + name));
+  } catch { }
+}
+
 export const money = n => "৳" + Number(n || 0).toLocaleString();
 
 export function renderNav(p) {

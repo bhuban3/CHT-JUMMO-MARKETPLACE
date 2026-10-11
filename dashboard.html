@@ -48,7 +48,7 @@
   <footer id="site-footer"></footer>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module">
-    import { guard, db, collection, doc, list, getDoc, setDoc, query, where, addDoc, updateDoc, deleteDoc, serverTimestamp, runTransaction, esc, money, say, badge, uploadImage, uploadProductImage } from "./js/app.js";
+    import { guard, db, collection, doc, list, getDoc, setDoc, query, where, addDoc, updateDoc, deleteDoc, serverTimestamp, runTransaction, esc, money, say, badge, uploadImage, uploadProductImage, invalidateCatalogCache } from "./js/app.js";
     let me, prods = [], editId = null, currentProductImage = "", productPreviewUrl = "";
     guard(["buyer", "seller"], async p => {
       me = p; h.textContent = "Welcome, " + p.name;
@@ -143,13 +143,14 @@
             transaction.update(productRef, { stock: stock - quantity });
             transaction.update(orderRef, { status });
           });
+          invalidateCatalogCache("products", "featured-products");
         } else await updateDoc(doc(db, "orders", orderId), { status });
         await load();
       } catch (error) { say(m, error.message || "Could not update the order.", false); }
     };
     pl.onclick = async e => {
       const { a, id } = e.target.dataset; if (!a) return;
-      if (a === "del" && confirm("Delete this product?")) { await deleteDoc(doc(db, "products", id)); load(); }
+      if (a === "del" && confirm("Delete this product?")) { await deleteDoc(doc(db, "products", id)); invalidateCatalogCache("products", "featured-products"); load(); }
       if (a === "edit") { const x = prods.find(q => q.id === id); editId = id; currentProductImage = x.imageUrl; pt.textContent = "Edit product"; pn.value = x.name; pc.value = x.categoryId; pp.value = x.price; ps.value = x.stock; pi.required = false; pipreview.src = currentProductImage; pipreview.hidden = false; pd.value = x.description; scrollTo(0, 0); }
     };
     pi.onchange = () => {
@@ -168,6 +169,7 @@
         if (!imageUrl) throw new Error("Choose a product image to upload.");
         const data = { name: pn.value, categoryId: pc.value, categoryName: pc.selectedOptions[0].dataset.n, price: Number(pp.value), stock: Number(ps.value), imageUrl, description: pd.value, sellerId: me.uid, sellerName: me.name };
         if (editId) await updateDoc(doc(db, "products", editId), data); else await addDoc(collection(db, "products"), { ...data, createdAt: serverTimestamp() });
+        invalidateCatalogCache("products", "featured-products");
         say(m, "Product saved.", true); pr.click(); load();
       } catch (error) { say(m, error.message || "Could not save product.", false); }
       finally { button.disabled = false; }
