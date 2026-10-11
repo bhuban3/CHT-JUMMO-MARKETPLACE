@@ -5,7 +5,7 @@ A web marketplace where farmers and artisans of the Chittagong Hill Tracts list 
 ## Features
 - Bootstrap 5 responsive UI
 - Seller identity verification: sellers upload ID photos, the admin approves or rejects (with a reason), and only approved sellers can list products
-- Product listings use direct image uploads instead of external image links
+- Product photos are compressed and stored in Firebase Storage
 - Landing page, product browsing with search, category and price filters
 - Registration and login with email verification and three roles: **Buyer**, **Seller**, **Admin**
 - Role-based access (page guards in JS and Firestore security rules in `firestore.rules`)
@@ -15,7 +15,7 @@ A web marketplace where farmers and artisans of the Chittagong Hill Tracts list 
 - Profile editing, responsive layout
 
 ## Tech
-HTML, CSS, Bootstrap 5, JavaScript (ES modules) · Firebase Authentication · Cloud Firestore · Hosted on Vercel / GitHub Pages
+HTML, CSS, Bootstrap 5, JavaScript (ES modules) · Firebase Authentication · Cloud Firestore · Firebase Storage · Hosted on Vercel / GitHub Pages
 
 ## Database (Firestore)
 `users`, `verifications`, `categories`, `products`, `orders` (each order holds one product, its quantity, status and buyer/seller info).
@@ -23,10 +23,11 @@ HTML, CSS, Bootstrap 5, JavaScript (ES modules) · Firebase Authentication · Cl
 ## Run locally
 1. Create a Firebase project, add a **Web app**, and paste its config into `js/firebase-config.js`.
 2. Enable **Authentication > Email/Password** and create **Firestore Database**. Keep Firebase Authentication's email verification template enabled.
-3. Copy `firestore.rules` into Firestore > Rules and publish. Users must verify their email before accessing marketplace data. Image uploads are compressed in the browser and saved in Firestore; Firebase Storage is not required.
-4. Serve the folder (ES modules need a server): `npx serve .` or VS Code Live Server.
-5. Register an account, then in the Firestore console open `users/<uid>` and set `role` to `admin` for your admin user.
-6. Log in as admin and add some categories. Register a seller, approve them in the admin panel, and add products.
+3. Copy `firestore.rules` into Firestore > Rules and publish. Users must verify their email before accessing marketplace data.
+4. Create/enable a Firebase Storage bucket, copy `storage.rules` into Storage > Rules, and publish. Product images are public to match the public product catalog; only approved sellers can upload to their own folder, and admins can migrate existing product images. Seller ID photos remain in Firestore under its restricted rules.
+5. Serve the folder (ES modules need a server): `npx serve .` or VS Code Live Server.
+6. Register an account, then in the Firestore console open `users/<uid>` and set `role` to `admin` for your admin user.
+7. Log in as admin and add some categories. Register a seller, approve them in the admin panel, and add products. Use **Move existing product photos to Storage** once to migrate older Base64 product images.
 
 ## Deploy
 Push to GitHub, import the repo in Vercel (framework: Other, no build command), or enable GitHub Pages. Then add your live domain under Firebase > Authentication > Settings > Authorized domains.

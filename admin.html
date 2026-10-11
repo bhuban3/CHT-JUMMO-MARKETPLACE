@@ -29,6 +29,10 @@
     <div class="table-responsive card card-body">
       <table class="table align-middle mb-0" id="pl"></table>
     </div>
+    <div class="mt-2" id="imageMigration" hidden>
+      <button class="btn btn-outline-primary btn-sm" id="migrateProductImages" type="button">Move existing product photos to Storage</button>
+      <span class="small ms-2" id="imageMigrationStatus" role="status"></span>
+    </div>
     <h2 class="h5 mt-4">Report: orders (excluding cancelled and rejected)</h2>
     <div class="row g-3">
       <div class="col-md-6">
@@ -46,10 +50,13 @@
   <footer id="site-footer"></footer>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module">
-    import { guard, db, collection, doc, list, addDoc, updateDoc, deleteDoc, esc, money, badge } from "./js/app.js";
+    import { guard, db, collection, doc, list, addDoc, updateDoc, deleteDoc, esc, money, badge, uploadProductImage } from "./js/app.js";
+    let legacyProducts = [];
     guard(["admin"], load);
     async function load() {
       const [cs, ps, os, vv] = await Promise.all(["categories", "products", "orders", "verifications"].map(c => list(collection(db, c))));
+      legacyProducts = ps.filter(p => typeof p.imageUrl === "string" && p.imageUrl.startsWith("data:image/"));
+      imageMigration.hidden = legacyProducts.length === 0;
       const rows = vv.sort((a, b) => (a.status === "Pending" ? 0 : 1) - (b.status === "Pending" ? 0 : 1));
       vl.innerHTML = "<thead><tr><th>Seller</th><th>Shop</th><th>ID</th><th>Document</th><th>Status</th><th></th></tr></thead>" + (rows.map(v => `<tr><td>${esc(v.fullName)}<br><small class="text-muted">${esc(v.sellerName)}</small></td><td>${esc(v.shopName)}</td><td>${esc(v.idType)}<br>${esc(v.idNumber)}</td><td><a href="${esc(v.docUrl)}" target="_blank" rel="noopener">View</a></td><td>${badge(v.status)}${v.adminNote ? `<br><small>${esc(v.adminNote)}</small>` : ""}</td><td class="text-nowrap">${v.status === "Pending" ? `<button class="btn btn-sm btn-success" data-a="vok" data-id="${v.id}">Approve</button> <button class="btn btn-sm btn-outline-danger" data-a="vno" data-id="${v.id}">Reject</button>` : ""}</td></tr>`).join("") || '<tr><td colspan="6">No verification requests yet.</td></tr>');
       cl.innerHTML = cs.map(c => `<tr><td>${esc(c.name)}</td><td class="text-end"><button class="btn btn-sm btn-outline-danger" data-a="dc" data-id="${c.id}">Delete</button></td></tr>`).join("") || "<tr><td>No categories yet. Add one above.</td></tr>";
@@ -59,6 +66,28 @@
       const tbl = (t, g) => `<thead><tr><th>${t}</th><th>Orders</th><th>Value</th></tr></thead>` + Object.entries(g).map(([k, v]) => `<tr><td>${esc(k)}</td><td>${v.n}</td><td>${money(v.v)}</td></tr>`).join("");
       r1.innerHTML = tbl("Category", group("categoryName")); r2.innerHTML = tbl("Seller", group("sellerName"));
     }
+    migrateProductImages.onclick = async () => {
+      const products = legacyProducts.filter(product => product.imageUrl.startsWith("data:image/"));
+      if (!products.length) return;
+      migrateProductImages.disabled = true;
+      let migrated = 0;
+      try {
+        for (const product of products) {
+          imageMigrationStatus.textContent = `Moving ${migrated + 1} of ${products.length}: ${product.name}`;
+          const imageBlob = await fetch(product.imageUrl).then(response => response.blob());
+          const imageUrl = await uploadProductImage(imageBlob, product.sellerId);
+          await updateDoc(doc(db, "products", product.id), { imageUrl });
+          product.imageUrl = imageUrl;
+          migrated++;
+        }
+        imageMigrationStatus.textContent = `Moved ${migrated} product photo(s).`;
+        await load();
+      } catch (error) {
+        imageMigrationStatus.textContent = `Stopped after ${migrated} photo(s): ${error.message || "Migration failed."}`;
+      } finally {
+        migrateProductImages.disabled = false;
+      }
+    };
     document.body.onclick = async e => {
       const { a, id } = e.target.dataset; if (!a) return;
       if (a === "vok") { await updateDoc(doc(db, "verifications", id), { status: "Approved", adminNote: "" }); await updateDoc(doc(db, "users", id), { approved: true }); }

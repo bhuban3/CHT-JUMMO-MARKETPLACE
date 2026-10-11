@@ -56,7 +56,7 @@
       cats_.innerHTML = cats.map(c => `<a class="btn btn-outline-primary btn-sm" href="products.html?cat=${encodeURIComponent(c.id)}">${esc(c.name)}</a>`).join("") || '<span class="text-muted">No categories yet.</span>';
       feat.innerHTML = ps.map(p => `<div class="col-6 col-md-4 col-lg-3"><div class="card h-100">
         <button class="product-card-trigger" type="button" data-view="${esc(p.id)}" aria-label="View details for ${esc(p.name)}">
-          <img src="${esc(p.imageUrl)}" class="card-img-top" alt="">
+          <img src="${esc(p.imageUrl)}" class="card-img-top" alt="" loading="lazy" decoding="async">
           <div class="card-body d-flex flex-column gap-1 text-start"><h3 class="h6 mb-0">${esc(p.name)}</h3><span class="badge text-bg-light align-self-start">${esc(p.categoryName)}</span><strong class="text-success">${money(p.price)}</strong><small class="text-muted">by ${esc(p.sellerName)}</small></div>
         </button>
       </div></div>`).join("") || '<p class="text-muted">No products yet. Verified sellers can add the first one.</p>';
