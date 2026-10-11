@@ -1,0 +1,127 @@
+:root {
+    --bs-primary: #27355f;
+    --bs-primary-rgb: 39, 53, 95;
+    --bs-link-color: #27355f;
+    --bs-body-bg: #f7f8f4
+}
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: Georgia, serif;
+    font-weight: 700;
+    color: #27355f !important
+}
+
+.brand img {
+    width: 68px;
+    height: 36px;
+    flex: 0 0 auto;
+    object-fit: contain
+}
+
+@media (max-width: 400px) {
+    .brand {
+        gap: 6px;
+        font-size: 0.875rem
+    }
+
+    .brand img {
+        width: 52px;
+        height: 30px
+    }
+}
+
+h1,
+h2,
+h3,
+.h4 {
+    font-family: Georgia, serif
+}
+
+.hero {
+    background-color: #28342d;
+    background-image: linear-gradient(90deg, rgba(17, 29, 23, 0.82), rgba(17, 29, 23, 0.4)), url("../images/background.jpg");
+    background-position: center, center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    color: #fff
+}
+
+.btn-primary {
+    --bs-btn-bg: #27355f;
+    --bs-btn-border-color: #27355f;
+    --bs-btn-hover-bg: #1d2847;
+    --bs-btn-hover-border-color: #1d2847
+}
+
+.btn-success {
+    --bs-btn-bg: #3d5a3a;
+    --bs-btn-border-color: #3d5a3a;
+    --bs-btn-hover-bg: #2f472d;
+    --bs-btn-hover-border-color: #2f472d
+}
+
+.card-img-top {
+    height: 150px;
+    object-fit: cover;
+    background: #e6d8a2
+}
+
+.upload-preview {
+    display: block;
+    max-width: 180px;
+    max-height: 120px;
+    object-fit: contain
+}
+
+.site-footer-main {
+    margin-top: 2rem;
+    padding: 2.5rem 0;
+    background: #202c27;
+    color: #fff
+}
+
+.footer-brand {
+    display: inline-block;
+    margin-bottom: 0.75rem;
+    color: #fff;
+    font-family: Georgia, serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    text-decoration: none
+}
+
+.footer-heading {
+    margin-bottom: 0.75rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 700
+}
+
+.site-footer-main a:not(.footer-brand) {
+    display: block;
+    width: fit-content;
+    margin-top: 0.4rem;
+    color: #e5e9e4;
+    text-decoration: none
+}
+
+.site-footer-main a:hover {
+    color: #fff;
+    text-decoration: underline
+}
+
+.footer-copy {
+    max-width: 32rem;
+    color: #c5cec8;
+    font-size: 0.9rem
+}
+
+.site-footer-bottom {
+    padding: 0.8rem 0;
+    background: #17211d;
+    color: #c5cec8;
+    font-size: 0.8rem
+}

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <title>Log in</title>
+</head>
+
+<body>
+  <header id="nav"></header>
+  <main class="container">
+    <form class="card card-body mx-auto my-5" style="max-width:420px" id="f">
+      <h1 class="h3">Log in</h1>
+      <div id="m"></div>
+      <label class="form-label" for="e">Email</label><input class="form-control" id="e" type="email" required>
+      <label class="form-label mt-3" for="p">Password</label><input class="form-control" id="p" type="password"
+        required>
+      <button class="btn btn-primary mt-4">Log in</button>
+      <button class="btn btn-outline-secondary mt-2" id="resend" type="button" hidden>Resend verification email</button>
+      <p class="text-muted mt-3 mb-0">New here? <a href="register.html">Create an account</a></p>
+    </form>
+  </main>
+  <footer id="site-footer"></footer>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module">
+    import { renderNav, auth, signInWithEmailAndPassword, sendEmailVerification, signOut, db, doc, getDoc, say } from "./js/app.js";
+    renderNav(null);
+    let unverifiedEmail = "";
+    f.onsubmit = async e => {
+      e.preventDefault();
+      resend.hidden = true;
+      try {
+        const c = await signInWithEmailAndPassword(auth, e.target.e.value, e.target.p.value);
+        if (!c.user.emailVerified) {
+          unverifiedEmail = e.target.e.value;
+          await signOut(auth);
+          resend.hidden = false;
+          say(m, "Verify your email before logging in. Check your inbox, or resend the verification email.");
+          return;
+        }
+        const s = await getDoc(doc(db, "users", c.user.uid));
+        location.href = s.data()?.role === "admin" ? "admin.html" : "dashboard.html";
+      } catch { say(m, "Could not log in. Check your email and password, then try again."); }
+    };
+    resend.onclick = async () => {
+      resend.disabled = true;
+      try {
+        const c = await signInWithEmailAndPassword(auth, unverifiedEmail, p.value);
+        if (c.user.emailVerified) {
+          await signOut(auth);
+          resend.hidden = true;
+          say(m, "Email verified. You can now log in.", true);
+        } else {
+          await sendEmailVerification(c.user);
+          await signOut(auth);
+          say(m, "A new verification email was sent. Check your inbox and spam folder.", true);
+        }
+      } catch { say(m, "Enter your password above, then try resending the verification email."); }
+      finally { resend.disabled = false; }
+    };
+  </script>
+</body>
+
+</html>
