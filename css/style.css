@@ -49,6 +49,21 @@ h3,
     color: #fff
 }
 
+@media (max-width: 575.98px) {
+    .hero {
+        background-position: center, center top;
+        background-size: cover, 100% auto;
+    }
+
+    .hero.py-5 {
+        padding-top: 0 !important
+    }
+
+    .hero > .container {
+        padding-top: calc(32vw + 1rem) !important
+    }
+}
+
 .btn-primary {
     --bs-btn-bg: #27355f;
     --bs-btn-border-color: #27355f;
@@ -67,6 +82,14 @@ h3,
     height: 150px;
     object-fit: cover;
     background: #e6d8a2
+}
+
+.product-detail-image {
+    display: block;
+    width: 100%;
+    height: min(55vh, 28rem);
+    object-fit: contain;
+    background: #f7f8f4
 }
 
 .upload-preview {
